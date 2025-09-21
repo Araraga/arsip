@@ -19,18 +19,42 @@ class AuthViewModel @Inject constructor(
     var busy by mutableStateOf(false)
     var error by mutableStateOf<String?>(null)
 
-    fun submit(onOk: () -> Unit) = viewModelScope.launch {
-        busy = true; error = null
+    fun submit(onAuthed: () -> Unit) = viewModelScope.launch {
+        error = validate()
+        if (error != null) return@launch
+        busy = true
         runCatching {
             if (isRegister) repo.register(email.trim(), pass, name.trim())
             else repo.login(email.trim(), pass)
-        }.onSuccess { onOk() }.onFailure { error = it.localizedMessage }
+        }.onSuccess { onAuthed() }
+            .onFailure { e -> error = toHumanMessage(e) }
         busy = false
     }
 
-    fun guest(onOk: () -> Unit) = viewModelScope.launch {
+    fun guest(onAuthed: () -> Unit) = viewModelScope.launch {
         busy = true
-        runCatching { repo.guest() }.onSuccess { onOk() }.onFailure { error = it.message }
+        runCatching { repo.guest() }
+            .onSuccess { onAuthed() }
+            .onFailure { e -> error = toHumanMessage(e) }
         busy = false
     }
+
+    private fun validate(): String? {
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) return "Email tidak valid"
+        if (pass.length < 6) return "Password minimal 6 karakter"
+        if (isRegister && name.isBlank()) return "Nama tidak boleh kosong"
+        return null
+    }
+
+    private fun toHumanMessage(e: Throwable): String {
+        val msg = e.message ?: return "Terjadi kesalahan"
+        return when {
+            msg.contains("INVALID_LOGIN_CREDENTIALS", true) -> "Email atau password salah"
+            msg.contains("WEAK_PASSWORD", true) -> "Password terlalu lemah (min 6)"
+            msg.contains("EMAIL_EXISTS", true) || msg.contains("email address is already in use", true) -> "Email sudah terdaftar"
+            msg.contains("TOO_MANY_REQUESTS", true) -> "Terlalu banyak percobaan. Coba lagi nanti."
+            else -> msg
+        }
+    }
 }
+

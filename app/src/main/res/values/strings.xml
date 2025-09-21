@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Arsip</string>
+    <string name="google_maps_key">PASTE_API_KEY_DI_SINI</string>
 </resources>

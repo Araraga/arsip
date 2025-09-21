@@ -1,9 +1,9 @@
 package com.example.arsip.data
 
 import android.net.Uri
-import com.example.arsip.upload.ImageUploader
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -11,47 +11,61 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class BooksRepository @Inject constructor(
-    private val db: FirebaseFirestore,
     private val auth: FirebaseAuth,
+    private val db: FirebaseFirestore,
     private val uploader: ImageUploader
 ) {
-    /** Tambah buku baru: upload gambar ke pihak ketiga lalu simpan URL ke Firestore */
-    suspend fun addBook(
-        title: String,
-        price: Long,
-        desc: String,
-        images: List<Uri>
-    ) {
-        val uid = auth.currentUser?.uid ?: error("User belum login")
-        val urls: List<String> = images.map { uploader.uploadOne(it) }   // upload & ambil URL
-
-        val doc = Book(
-            title = title,
-            price = price,
-            description = desc,
-            imageUrls = urls,
-            ownerId = uid
-        )
-        db.collection("books").add(doc).await()
-    }
-
-    /** (opsional) flow daftar buku milik user untuk layar “Buku Saya” */
     fun myBooksFlow(): Flow<List<Book>> = callbackFlow {
         val uid = auth.currentUser?.uid
         if (uid == null) {
             trySend(emptyList())
-            awaitClose {}
+            close()
             return@callbackFlow
         }
+
         val reg = db.collection("books")
             .whereEqualTo("ownerId", uid)
-            .addSnapshotListener { snaps, e ->
-                if (e != null) return@addSnapshotListener
-                val list = snaps?.documents?.map { d ->
-                    d.toObject(Book::class.java)?.copy(id = d.id)
-                }?.filterNotNull().orEmpty()
-                trySend(list)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snap, e ->
+                if (e != null) { trySend(emptyList()); return@addSnapshotListener }
+                val items = snap?.documents?.mapNotNull { doc ->
+                    val b = doc.toObject(Book::class.java) ?: return@mapNotNull null
+                    b.apply { id = doc.id }
+                }.orEmpty()
+                trySend(items)
             }
         awaitClose { reg.remove() }
+    }
+
+    suspend fun addBook(
+        title: String,
+        price: Long,
+        desc: String,
+        images: List<Uri>,
+        addressText: String,
+        lat: Double?, lng: Double?
+    ): Result<Unit> = runCatching {
+        val uid = auth.currentUser?.uid ?: error("User belum login")
+        val urls = images.map { uploader.uploadOne(it) }
+        val entity = Book(
+            title = title,
+            price = price,
+            description = desc,
+            imageUrls = urls,
+            ownerId = uid,
+            addressText = addressText,
+            lat = lat,
+            lng = lng
+        )
+        db.collection("books").add(entity).await()
+    }
+
+    suspend fun getMyAddress(): Triple<String, Double?, Double?> {
+        val uid = auth.currentUser?.uid ?: return Triple("", null, null)
+        val d = db.collection("users").document(uid).get().await()
+        val t = d.getString("addressText") ?: ""
+        val la = d.getDouble("lat")
+        val ln = d.getDouble("lng")
+        return Triple(t, la, ln)
     }
 }
