@@ -3,7 +3,6 @@ package com.example.arsip.data
 import android.net.Uri
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -22,16 +21,23 @@ class BooksRepository @Inject constructor(
             close()
             return@callbackFlow
         }
+        var last = emptyList<Book>()
 
         val reg = db.collection("books")
-            .whereEqualTo("ownerId", uid)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .whereEqualTo("ownerId", uid)       // ⬅ no orderBy; hindari index wajib
             .addSnapshotListener { snap, e ->
-                if (e != null) { trySend(emptyList()); return@addSnapshotListener }
+                if (e != null) {
+                    // JANGAN clear list; biarkan tampil data terakhir
+                    trySend(last)
+                    return@addSnapshotListener
+                }
                 val items = snap?.documents?.mapNotNull { doc ->
                     val b = doc.toObject(Book::class.java) ?: return@mapNotNull null
                     b.apply { id = doc.id }
                 }.orEmpty()
+                    .sortedByDescending { it.createdAt.toDate().time } // sort di klien
+
+                last = items
                 trySend(items)
             }
         awaitClose { reg.remove() }

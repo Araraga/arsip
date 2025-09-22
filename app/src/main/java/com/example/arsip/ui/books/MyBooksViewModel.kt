@@ -2,17 +2,31 @@ package com.example.arsip.ui.books
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.arsip.data.Book
 import com.example.arsip.data.BooksRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MyBooksViewModel @Inject constructor(
-    repo: BooksRepository
+    private val repo: BooksRepository
 ) : ViewModel() {
-    // Flow daftar buku milik user
-    val books = repo.myBooksFlow()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _items = MutableStateFlow<List<Book>>(emptyList())
+    val items: StateFlow<List<Book>> = _items
+
+    private val _loading = MutableStateFlow(true)
+    val loading: StateFlow<Boolean> = _loading
+
+    init {
+        viewModelScope.launch {
+            repo.myBooksFlow().collect { list ->
+                _items.value = list
+                _loading.value = false
+            }
+        }
+    }
 }
