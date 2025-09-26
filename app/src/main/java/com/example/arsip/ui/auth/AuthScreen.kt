@@ -61,6 +61,7 @@ private fun AuthHeader(isRegister: Boolean) {
         contentAlignment = Alignment.Center
     ) {
         Column(
+            modifier = Modifier.padding(top = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {

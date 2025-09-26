@@ -26,16 +26,13 @@ class ProfileViewModel @Inject constructor(
     private val uploader: ImageUploader
 ) : ViewModel() {
 
-    // --- State untuk UI ---
     var name by mutableStateOf("")
     var busy by mutableStateOf(false)
 
-    // Form alamat (diisi manual atau dari snapshot awal)
     var tmpAddr by mutableStateOf("")
     var tmpLat by mutableStateOf("")
     var tmpLng by mutableStateOf("")
 
-    // Snapshot dokumen user (dipakai di UI -> vm.snap.collectAsState())
     private val _snap = MutableStateFlow<DocumentSnapshot?>(null)
     val snap: StateFlow<DocumentSnapshot?> = _snap
 
@@ -47,13 +44,17 @@ class ProfileViewModel @Inject constructor(
             reg = db.collection("users").document(uid)
                 .addSnapshotListener { ds, _ ->
                     _snap.value = ds
-
-                    // isi nilai awal form dari dokumen user
                     tmpAddr = ds?.getString("addressText") ?: ""
                     tmpLat  = ds?.getDouble("lat")?.toString() ?: ""
                     tmpLng  = ds?.getDouble("lng")?.toString() ?: ""
                 }
         }
+    }
+
+    // FUNGSI BARU: Untuk menerima update LatLng dari map picker
+    fun onLatLngSelected(lat: Double?, lng: Double?) {
+        tmpLat = lat?.toString() ?: ""
+        tmpLng = lng?.toString() ?: ""
     }
 
     fun saveName() = viewModelScope.launch {
@@ -77,7 +78,7 @@ class ProfileViewModel @Inject constructor(
         val uid = auth.currentUser?.uid ?: return@launch
         busy = true
         runCatching {
-            val url = uploader.uploadOne(uri) // upload ke Cloudinary/ImageKit
+            val url = uploader.uploadOne(uri)
             db.collection("users").document(uid)
                 .set(mapOf("photoUrl" to url), SetOptions.merge())
                 .await()
@@ -86,14 +87,14 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun saveAddress(addressText: String, lat: Double?, lng: Double?) = viewModelScope.launch {
+    fun saveAddress() = viewModelScope.launch {
         val uid = auth.currentUser?.uid ?: return@launch
         busy = true
         runCatching {
             val data = hashMapOf<String, Any?>(
-                "addressText" to addressText,
-                "lat" to lat,
-                "lng" to lng
+                "addressText" to tmpAddr,
+                "lat" to tmpLat.toDoubleOrNull(),
+                "lng" to tmpLng.toDoubleOrNull()
             )
             db.collection("users").document(uid)
                 .set(data, SetOptions.merge())

@@ -3,7 +3,7 @@ package com.example.arsip.ui.books
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.arsip.data.Book
-import com.example.arsip.data.BooksRepository
+import com.example.arsip.data.BooksRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MyBooksViewModel @Inject constructor(
-    private val repo: BooksRepository
+    private val repo: BooksRepositoryImpl
 ) : ViewModel() {
 
     private val _items = MutableStateFlow<List<Book>>(emptyList())

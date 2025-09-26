@@ -1,8 +1,8 @@
+// File: di/RepositoryModule.kt
+
 package com.example.arsip.di
 
 import com.example.arsip.data.AuthRepository
-import com.example.arsip.data.BooksRepository
-import com.example.arsip.data.ImageUploader
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -15,16 +15,13 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideAuthRepository(
         auth: FirebaseAuth,
         db: FirebaseFirestore
     ): AuthRepository = AuthRepository(auth, db)
 
-    @Provides @Singleton
-    fun provideBooksRepository(
-        auth: FirebaseAuth,
-        db: FirebaseFirestore,
-        uploader: ImageUploader
-    ): BooksRepository = BooksRepository(auth, db, uploader)
+    // Catatan: provideBooksRepositoryImpl yang sebelumnya ada di sini sudah dihapus
+    // karena tidak diperlukan lagi.
 }
