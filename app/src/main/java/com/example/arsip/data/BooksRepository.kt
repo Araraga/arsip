@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface BooksRepository {
 
     fun myBooksFlow(): Flow<List<Book>>
+    fun allBooksFlow(): Flow<List<Book>>
 
     suspend fun addBook(
         title: String,
