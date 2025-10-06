@@ -18,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.arsip.ui.auth.AuthScreen
+import com.example.arsip.ui.auth.AuthViewModel
 import com.example.arsip.ui.books.*
 import com.example.arsip.ui.map.MapPickerScreen
 import com.example.arsip.ui.discover.DiscoverScreen
@@ -32,12 +33,36 @@ fun AppNav() {
     NavHost(navController = nav, startDestination = "auth") {
 
         composable("auth") {
-            AuthScreen(onAuthed = {
-                nav.navigate("main") {
-                    popUpTo("auth") { inclusive = true }
-                    launchSingleTop = true
+            val vm: AuthViewModel = hiltViewModel()
+
+            // Menangani hasil dari peta untuk register
+            LaunchedEffect(it.savedStateHandle) {
+                val lat = it.savedStateHandle.get<Double>("picked_lat")
+                val lng = it.savedStateHandle.get<Double>("picked_lng")
+                val address = it.savedStateHandle.get<String>("picked_address")
+
+                if (lat != null && lng != null && address != null) {
+                    vm.onLocationSelected(lat, lng, address)
+
+                    // Reset data setelah digunakan
+                    it.savedStateHandle.remove<Double>("picked_lat")
+                    it.savedStateHandle.remove<Double>("picked_lng")
+                    it.savedStateHandle.remove<String>("picked_address")
                 }
-            })
+            }
+
+            AuthScreen(
+                onAuthed = {
+                    nav.navigate("main") {
+                        popUpTo("auth") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onPickMap = {
+                    nav.navigate("pickLocation")
+                },
+                vm = vm
+            )
         }
 
         composable("main") { entry ->
@@ -111,6 +136,7 @@ fun AppNav() {
                             }
                         )
                         3 -> ProfileScreen(
+                            navController = nav,
                             onLoggedOut = {
                                 nav.navigate("auth") { popUpTo(0) }
                             },

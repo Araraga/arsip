@@ -90,16 +90,36 @@ class HomeViewModel @Inject constructor(
                         emit(null)
                     }
                     .collectLatest { userProfile ->
+                        // ✅ FIXED: Use real user location from database
+                        val userLocation = if (userProfile?.latitude != null && userProfile?.longitude != null &&
+                            userProfile.latitude != 0.0 && userProfile.longitude != 0.0) {
+                            LatLng(userProfile.latitude, userProfile.longitude)
+                        } else {
+                            // Default ke Jakarta jika tidak ada lokasi user
+                            LatLng(-6.2088, 106.8456)
+                        }
+
                         _state.update {
                             it.copy(
                                 userName = userProfile?.displayName?.ifBlank { "User" } ?: "User",
-                                userPhotoUrl = userProfile?.photoUrl
+                                userPhotoUrl = userProfile?.photoUrl,
+                                userLocation = userLocation
                             )
                         }
+
+                        // ✅ FIXED: Reapply filters immediately when user location changes
+                        applyFilters()
                     }
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Error in loadUserProfile", e)
-                _state.update { it.copy(userName = "User") }
+                _state.update {
+                    it.copy(
+                        userName = "User",
+                        userLocation = LatLng(-6.2088, 106.8456) // Default Jakarta
+                    )
+                }
+                // Apply filters even with default location
+                applyFilters()
             }
         }
     }
@@ -183,51 +203,55 @@ class HomeViewModel @Inject constructor(
 
     private fun filterBooks(books: List<Book>): List<Book> {
         val currentState = _state.value
-        var result = books
 
+        // ✅ FILTER 1: Hanya tampilkan buku yang tersedia (isAvailable = true)
+        var filteredBooks = books.filter { it.isAvailable }
+
+        // ✅ FILTER 2: Filter berdasarkan search query
         if (currentState.searchQuery.isNotBlank()) {
-            result = result.filter {
-                it.title.contains(currentState.searchQuery, ignoreCase = true) ||
-                        it.author.contains(currentState.searchQuery, ignoreCase = true) ||
-                        it.category.contains(currentState.searchQuery, ignoreCase = true)
+            val query = currentState.searchQuery.lowercase()
+            filteredBooks = filteredBooks.filter { book ->
+                book.title.lowercase().contains(query) ||
+                        book.author.lowercase().contains(query) ||
+                        book.category.lowercase().contains(query) ||
+                        book.desc.lowercase().contains(query)
             }
         }
 
-        if (currentState.userLocation != null) {
-            result = result.filter { book ->
-                if (book.lat == null || book.lng == null) return@filter false
-                val distance = calculateDistanceInKm(
-                    currentState.userLocation.latitude,
-                    currentState.userLocation.longitude,
-                    book.lat,
-                    book.lng
-                )
-                distance <= currentState.radiusKm
-            }
-        }
-
-        result = when (currentState.selectedFilter) {
-            "terdekat" -> {
-                if (currentState.userLocation != null) {
-                    result.sortedBy { book ->
-                        if (book.lat == null || book.lng == null) Double.MAX_VALUE
-                        else calculateDistanceInKm(
-                            currentState.userLocation.latitude,
-                            currentState.userLocation.longitude,
-                            book.lat,
-                            book.lng
-                        )
-                    }
+        // ✅ FILTER 3: Filter berdasarkan lokasi user dan jarak maksimal
+        val userLocation = currentState.userLocation
+        if (userLocation != null && currentState.selectedFilter == "terdekat") {
+            filteredBooks = filteredBooks.filter { book ->
+                if (book.lat != null && book.lng != null) {
+                    val distance = calculateDistanceInKm(
+                        userLocation.latitude,
+                        userLocation.longitude,
+                        book.lat,
+                        book.lng
+                    )
+                    distance <= 25.0 // Maksimal 25km sesuai dengan filter chip
                 } else {
-                    result.sortedByDescending { it.createdAt }
+                    false // Hilangkan buku yang tidak memiliki koordinat
+                }
+            }.sortedBy { book ->
+                // Sort berdasarkan jarak terdekat
+                if (book.lat != null && book.lng != null) {
+                    calculateDistanceInKm(
+                        userLocation.latitude,
+                        userLocation.longitude,
+                        book.lat,
+                        book.lng
+                    )
+                } else {
+                    Double.MAX_VALUE
                 }
             }
-            "terbaru" -> result.sortedByDescending { it.createdAt }
-            "populer" -> result.sortedByDescending { it.isAvailable }
-            else -> result
+        } else if (currentState.selectedFilter == "terbaru") {
+            // ✅ FILTER 4: Sort berdasarkan tanggal terbaru
+            filteredBooks = filteredBooks.sortedByDescending { it.createdAt.toDate().time }
         }
 
-        return result
+        return filteredBooks
     }
 
     private fun calculateDistanceInKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {

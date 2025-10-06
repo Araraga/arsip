@@ -25,6 +25,7 @@ class EditBookViewModel @Inject constructor(
     var title by mutableStateOf("")
     var author by mutableStateOf("")
     var desc by mutableStateOf("")
+    var selectedCategory by mutableStateOf("")
     var addressText by mutableStateOf("")
     var lat by mutableStateOf<Double?>(null)
     var lng by mutableStateOf<Double?>(null)
@@ -43,6 +44,7 @@ class EditBookViewModel @Inject constructor(
                 title = it.title
                 author = it.author
                 desc = it.desc
+                selectedCategory = it.category
                 addressText = it.addressText
                 lat = it.lat
                 lng = it.lng
@@ -75,6 +77,7 @@ class EditBookViewModel @Inject constructor(
             title = title.trim(),
             author = author.trim(),
             desc = desc.trim(),
+            category = selectedCategory.trim(),
             addressText = addressText.trim(),
             lat = lat,
             lng = lng

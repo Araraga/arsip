@@ -14,6 +14,7 @@ interface BooksRepository {
         title: String,
         author: String,
         desc: String,
+        category: String,
         images: List<Uri>,
         addressText: String,
         lat: Double?,
@@ -30,6 +31,7 @@ interface BooksRepository {
         title: String,
         author: String,
         desc: String,
+        category: String,
         addressText: String,
         lat: Double?,
         lng: Double?

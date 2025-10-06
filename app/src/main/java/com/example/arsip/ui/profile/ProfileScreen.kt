@@ -26,10 +26,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 
 @Composable
 fun ProfileScreen(
+    navController: NavController,
     onLoggedOut: () -> Unit,
     onPickMap: () -> Unit, // Callback untuk membuka peta
     vm: ProfileViewModel = hiltViewModel()
@@ -42,6 +44,27 @@ fun ProfileScreen(
     val pickPhoto = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? -> if (uri != null) vm.updatePhoto(uri) }
+
+    // Menangani hasil dari MapPickerScreen
+    LaunchedEffect(navController) {
+        val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+        savedStateHandle?.let { handle ->
+            handle.getLiveData<Double>("picked_lat").observeForever { lat ->
+                handle.getLiveData<Double>("picked_lng").observeForever { lng ->
+                    handle.getLiveData<String>("picked_address").observeForever { address ->
+                        if (lat != null && lng != null && address != null) {
+                            vm.onLatLngSelected(lat, lng)
+                            vm.tmpAddr = address
+                            // Reset data untuk mencegah trigger berulang
+                            handle.remove<Double>("picked_lat")
+                            handle.remove<Double>("picked_lng")
+                            handle.remove<String>("picked_address")
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // Memindahkan semua konten ke dalam LazyColumn agar bisa di-scroll
     LazyColumn(
@@ -58,6 +81,34 @@ fun ProfileScreen(
                 onSaveName = { vm.saveName() },
                 onPickPhoto = { pickPhoto.launch("image/*") } // Melewatkan aksi pick photo
             )
+        }
+
+        // --- Kartu untuk Nomor WhatsApp ---
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Nomor WhatsApp", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.height(8.dp))
+                    val phoneNumber = snap?.getString("phoneNumber") ?: "Belum diatur"
+                    Text(
+                        text = if (phoneNumber.isNotBlank() && phoneNumber != "Belum diatur") phoneNumber else "Nomor WhatsApp belum diatur",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (phoneNumber.isNotBlank() && phoneNumber != "Belum diatur")
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (phoneNumber.isBlank() || phoneNumber == "Belum diatur") {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "💡 Nomor WhatsApp diperlukan agar orang lain dapat menghubungi Anda untuk meminjam buku",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
         }
 
         // --- Kartu untuk Alamat ---

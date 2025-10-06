@@ -16,6 +16,7 @@ class AddBookViewModel @Inject constructor(
     var title by mutableStateOf("")
     var author by mutableStateOf("")
     var desc by mutableStateOf("")
+    var selectedCategory by mutableStateOf("")
     var images by mutableStateOf<List<Uri>>(emptyList()); private set
 
     var useProfileAddr by mutableStateOf(true)
@@ -48,12 +49,13 @@ class AddBookViewModel @Inject constructor(
         // --- VALIDASI DIMULAI DI SINI ---
         if (title.isBlank() ||
             author.isBlank() ||
+            selectedCategory.isBlank() ||
             images.isEmpty() ||
             addressText.isBlank() ||
             lat == null ||
             lng == null)
         {
-            message = "Harap isi semua kolom wajib (Judul, Penulis, Alamat, Foto)."
+            message = "Harap isi semua kolom wajib (Judul, Penulis, Kategori, Alamat, Foto)."
             return // Menghentikan eksekusi fungsi jika validasi gagal
         }
         // --- VALIDASI SELESAI ---
@@ -63,6 +65,7 @@ class AddBookViewModel @Inject constructor(
             title = title.trim(),
             author = author.trim(),
             desc = desc.trim(),
+            category = selectedCategory,
             images = images,
             addressText = addressText.trim(),
             lat = lat,

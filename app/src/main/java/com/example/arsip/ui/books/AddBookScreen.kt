@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.arsip.data.BookCategories
 import kotlinx.coroutines.launch
 
 @Composable
@@ -129,7 +131,6 @@ fun AddBookScreen(
             }
             item {
                 FormSectionCard(title = "Foto Sampul") {
-                    // ... (Konten form tidak berubah)
                     if (vm.images.isNotEmpty()) {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(vm.images) { uri ->
@@ -154,7 +155,47 @@ fun AddBookScreen(
                     }
                 }
             }
-            // Spacer di akhir tidak lagi diperlukan karena Scaffold menanganinya
+            item {
+                FormSectionCard(title = "Kategori Buku") {
+                    var expanded by remember { mutableStateOf(false) }
+
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
+                    ) {
+                        OutlinedTextField(
+                            readOnly = true,
+                            value = vm.selectedCategory.ifEmpty { "Pilih Kategori" },
+                            onValueChange = {},
+                            label = { Text("Kategori Buku") },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Pilih Kategori"
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            // Daftar kategori buku diambil dari BookCategories
+                            BookCategories.ALL_CATEGORIES.forEach { category ->
+                                DropdownMenuItem(
+                                    text = { Text(category) },
+                                    onClick = {
+                                        vm.selectedCategory = category
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -165,7 +206,6 @@ private fun FormSectionCard(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    // ... (Fungsi FormSectionCard tidak berubah)
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -187,5 +227,4 @@ private fun FormSectionCard(
 @Preview(showBackground = true, name = "Halaman Tambah Buku")
 @Composable
 private fun AddBookScreenPreview() {
-    // ... (Fungsi Preview tidak perlu diubah)
 }

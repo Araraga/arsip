@@ -71,6 +71,7 @@ class BooksRepositoryImpl @Inject constructor(
         title: String,
         author: String,
         desc: String,
+        category: String,
         images: List<Uri>,
         addressText: String,
         lat: Double?, lng: Double?
@@ -81,6 +82,7 @@ class BooksRepositoryImpl @Inject constructor(
             title = title,
             author = author,
             desc = desc,
+            category = category,
             imageUrls = urls,
             ownerId = uid,
             addressText = addressText,
@@ -95,6 +97,7 @@ class BooksRepositoryImpl @Inject constructor(
         title: String,
         author: String,
         desc: String,
+        category: String,
         addressText: String,
         lat: Double?,
         lng: Double?
@@ -104,6 +107,7 @@ class BooksRepositoryImpl @Inject constructor(
                 "title" to title,
                 "author" to author,
                 "desc" to desc,
+                "category" to category,
                 "addressText" to addressText,
                 "lat" to lat,
                 "lng" to lng
@@ -139,5 +143,9 @@ class BooksRepositoryImpl @Inject constructor(
 
     override suspend fun deleteBook(id: String) {
         db.collection("books").document(id).delete().await()
+    }
+
+    fun getCurrentUserId(): String? {
+        return auth.currentUser?.uid
     }
 }

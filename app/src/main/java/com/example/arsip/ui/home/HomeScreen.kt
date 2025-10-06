@@ -79,7 +79,7 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(140.dp)
+                        .height(180.dp) // Increased height to cover status bar area
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
@@ -88,7 +88,7 @@ fun HomeScreen(
                                 )
                             )
                         )
-                        .padding(16.dp)
+                        .padding(top = 40.dp, start = 16.dp, end = 16.dp, bottom = 16.dp) // Added top padding for status bar
                 ) {
                     Column(
                         modifier = Modifier.align(Alignment.CenterStart)
@@ -129,6 +129,7 @@ fun HomeScreen(
                 )
             }
 
+            // Quick Filters - Inline (Updated: Removed "Populer")
             item {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -138,23 +139,25 @@ fun HomeScreen(
                         FilterChip(
                             selected = state.selectedFilter == "terdekat",
                             onClick = { vm.onFilterSelect("terdekat") },
-                            label = { Text("Terdekat") }
+                            label = { Text("📍 Terdekat (25km)") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF6200EE),
+                                selectedLabelColor = Color.White
+                            )
                         )
                     }
                     item {
                         FilterChip(
                             selected = state.selectedFilter == "terbaru",
                             onClick = { vm.onFilterSelect("terbaru") },
-                            label = { Text("Terbaru") }
+                            label = { Text("🕒 Terbaru") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF6200EE),
+                                selectedLabelColor = Color.White
+                            )
                         )
                     }
-                    item {
-                        FilterChip(
-                            selected = state.selectedFilter == "populer",
-                            onClick = { vm.onFilterSelect("populer") },
-                            label = { Text("Populer") }
-                        )
-                    }
+                    // ✅ REMOVED "Populer" filter chip as requested
                 }
             }
 
@@ -215,7 +218,7 @@ fun HomeScreen(
 
             item {
                 Text(
-                    text = "📍 Buku di Sekitar",
+                    text = "📍 Buku Tersedia di Sekitar",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
@@ -237,16 +240,39 @@ fun HomeScreen(
 
             if (!state.isLoading && state.nearbyBooks.isEmpty()) {
                 item {
-                    Box(
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Belum ada buku di sekitar",
-                            color = Color.Gray
+                            .padding(horizontal = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
                         )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "📚",
+                                fontSize = 48.sp
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Belum ada buku tersedia di sekitar",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Coba ubah filter atau bagikan buku Anda untuk memulai berbagi dengan komunitas!",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
                     }
                 }
             }

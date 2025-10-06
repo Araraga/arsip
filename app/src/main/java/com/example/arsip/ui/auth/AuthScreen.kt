@@ -32,17 +32,27 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.arsip.R // <-- SESUAIKAN DENGAN NAMA PAKET APLIKASI ANDA
 
 @Composable
-fun AuthScreen(onAuthed: () -> Unit, vm: AuthViewModel = hiltViewModel()) {
+fun AuthScreen(
+    onAuthed: () -> Unit,
+    onPickMap: () -> Unit = {},
+    vm: AuthViewModel = hiltViewModel()
+) {
     AuthContent(
         isRegister = vm.isRegister,
         email = vm.email,
         pass = vm.pass,
         name = vm.name,
+        phoneNumber = vm.phoneNumber,
+        addressText = vm.addressText,
         busy = vm.busy,
+        error = vm.error,
         onToggle = { vm.isRegister = !vm.isRegister },
         onEmail = { vm.email = it },
         onPass = { vm.pass = it },
         onName = { vm.name = it },
+        onPhoneNumber = { vm.phoneNumber = it },
+        onAddressText = { vm.addressText = it },
+        onPickMap = onPickMap,
         onSubmit = { vm.submit(onAuthed) },
         onGuest = { vm.guest(onAuthed) }
     )
@@ -97,13 +107,19 @@ private fun AuthContent(
     email: String,
     pass: String,
     name: String,
+    phoneNumber: String,
+    addressText: String,
     busy: Boolean,
+    error: String?,
     onToggle: () -> Unit,
     onEmail: (String) -> Unit,
     onPass: (String) -> Unit,
     onName: (String) -> Unit,
+    onPhoneNumber: (String) -> Unit,
+    onAddressText: (String) -> Unit,
     onSubmit: () -> Unit,
-    onGuest: () -> Unit
+    onGuest: () -> Unit,
+    onPickMap: () -> Unit = {}
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -129,13 +145,29 @@ private fun AuthContent(
             )
             Spacer(Modifier.height(24.dp))
 
+            // Error message display
+            error?.let {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Text(
+                        text = it,
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+
             if (isRegister) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = onName,
                     label = { Text("Nama Lengkap") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    enabled = !busy
                 )
                 Spacer(Modifier.height(16.dp))
             }
@@ -146,7 +178,8 @@ private fun AuthContent(
                 label = { Text("Alamat Email") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true
+                singleLine = true,
+                enabled = !busy
             )
             Spacer(Modifier.height(16.dp))
 
@@ -156,6 +189,7 @@ private fun AuthContent(
                 label = { Text("Kata Sandi") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                enabled = !busy,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
@@ -174,7 +208,42 @@ private fun AuthContent(
                     }
                 }
             )
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
+
+            if (isRegister) {
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = onPhoneNumber,
+                    label = { Text("Nomor WhatsApp (08xxxxxxxxx)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    singleLine = true,
+                    enabled = !busy,
+                    placeholder = { Text("08123456789") }
+                )
+                Spacer(Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = addressText,
+                    onValueChange = onAddressText,
+                    label = { Text("Alamat Lengkap") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    enabled = !busy,
+                    placeholder = { Text("Jl. Contoh No. 123, Kota, Provinsi") }
+                )
+                Spacer(Modifier.height(16.dp))
+
+                // Tombol untuk memilih lokasi di peta
+                OutlinedButton(
+                    onClick = onPickMap,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !busy
+                ) {
+                    Text("📍 Pilih Lokasi di Peta")
+                }
+                Spacer(Modifier.height(24.dp))
+            }
 
             Button(
                 onClick = onSubmit,
@@ -229,11 +298,16 @@ private fun AuthPreviewLogin() {
             email = "test@example.com",
             pass = "password",
             name = "",
+            phoneNumber = "",
+            addressText = "",
             busy = false,
+            error = null,
             onToggle = {},
             onEmail = {},
             onPass = {},
             onName = {},
+            onPhoneNumber = {},
+            onAddressText = {},
             onSubmit = {},
             onGuest = {}
         )
@@ -249,11 +323,16 @@ private fun AuthPreviewRegister() {
             email = "baru@example.com",
             pass = "secure123",
             name = "Pengguna Baru",
+            phoneNumber = "08123456789",
+            addressText = "Jl. Contoh Alamat No. 123",
             busy = false,
+            error = null,
             onToggle = {},
             onEmail = {},
             onPass = {},
             onName = {},
+            onPhoneNumber = {},
+            onAddressText = {},
             onSubmit = {},
             onGuest = {}
         )

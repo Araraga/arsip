@@ -10,16 +10,25 @@ class AuthRepository @Inject constructor(
     private val auth: FirebaseAuth,
     private val db: FirebaseFirestore
 ) {
-    suspend fun register(email: String, pass: String, name: String) {
-        auth.createUserWithEmailAndPassword(email, pass).await()
+    suspend fun register(
+        email: String,
+        password: String,
+        name: String,
+        phoneNumber: String,
+        addressText: String,
+        lat: Double?,
+        lng: Double?
+    ) {
+        auth.createUserWithEmailAndPassword(email, password).await()
         val uid = auth.currentUser?.uid ?: error("User tidak ditemukan setelah register")
 
         val data = mapOf(
             "displayName" to name,
+            "phoneNumber" to phoneNumber,
             "photoUrl" to "",
-            "addressText" to "",
-            "lat" to null,
-            "lng" to null,
+            "addressText" to addressText,
+            "lat" to lat,
+            "lng" to lng,
             "createdAt" to Timestamp.now()
         )
         db.collection("users").document(uid).set(data).await()
