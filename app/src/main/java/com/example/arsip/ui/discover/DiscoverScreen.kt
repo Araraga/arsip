@@ -2,28 +2,39 @@
 
 package com.example.arsip.ui.discover
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidView
 import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -45,6 +56,41 @@ fun DiscoverScreen(
     var showMap by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFBB86FC),
+                            Color(0xFF6200EE)
+                        )
+                    )
+                )
+        ) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Outlined.Explore,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = "Temukan Buku Baru",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = MaterialTheme.typography.headlineMedium.fontSize,
+                    color = Color.White
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
         // Search at the top
         Row(
             Modifier
@@ -89,20 +135,55 @@ fun DiscoverScreen(
                 onClickBook = onClickBook
             )
         } else {
-            LazyColumn(Modifier.fillMaxSize()) {
-                items(items) { b ->
-                    ListItem(
-                        headlineContent = { Text(b.title) },
-                        supportingContent = { Text(b.category.ifBlank { "Tanpa kategori" }) },
-                        leadingContent = {
-                            val first = b.imageUrls.firstOrNull()
-                            if (first != null) AsyncImage(model = first, contentDescription = null, modifier = Modifier.size(56.dp))
-                        },
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                items(items) { book ->
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onClickBook(b.id) }
-                    )
-                    Divider()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .clickable { onClickBook(book.id) },
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3E8FF))
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            AsyncImage(
+                                model = book.imageUrls.firstOrNull(),
+                                contentDescription = book.title,
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text = book.title,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = Color(0xFF6200EE)
+                                )
+                                if (book.author.isNotBlank()) {
+                                    Text(
+                                        text = book.author,
+                                        fontSize = 14.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+                            Icon(
+                                Icons.Default.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = Color(0xFF6200EE)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -140,7 +221,7 @@ private fun DiscoverMap(
         modifier = Modifier.fillMaxSize(),
         factory = {
             MapView(ctx).apply {
-                org.osmdroid.tileprovider.tilesource.TileSourceFactory.MAPNIK.also { setTileSource(it) }
+                TileSourceFactory.MAPNIK.also { setTileSource(it) }
                 controller.setZoom(13.0)
                 val center = if (userLat != null && userLng != null) GeoPoint(userLat, userLng) else GeoPoint(-6.2, 106.816666)
                 controller.setCenter(center)
@@ -187,5 +268,3 @@ private fun CategoryMenu(selected: String, onChange: (String) -> Unit, categorie
         }
     }
 }
-
-
