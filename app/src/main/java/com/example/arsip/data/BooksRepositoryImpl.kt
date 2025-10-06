@@ -45,6 +45,27 @@ class BooksRepositoryImpl @Inject constructor(
         awaitClose { reg.remove() }
     }
 
+    override fun allBooksFlow(): Flow<List<Book>> = callbackFlow {
+        var last = emptyList<Book>()
+
+        val reg = db.collection("books")
+            .addSnapshotListener { snap, e ->
+                if (e != null) {
+                    trySend(last)
+                    return@addSnapshotListener
+                }
+                val items = snap?.documents?.mapNotNull { doc ->
+                    val b = doc.toObject(Book::class.java) ?: return@mapNotNull null
+                    b.apply { id = doc.id }
+                }.orEmpty()
+                    .sortedByDescending { it.createdAt.toDate().time }
+
+                last = items
+                trySend(items)
+            }
+        awaitClose { reg.remove() }
+    }
+
     override suspend fun addBook(
         title: String,
         author: String,

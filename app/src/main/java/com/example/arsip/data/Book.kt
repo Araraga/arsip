@@ -13,6 +13,7 @@ data class Book(
     val imageUrls: List<String> = emptyList(),
 
     val ownerId: String = "",
+    val category: String = "",
     val addressText: String = "",
     @get:PropertyName("isAvailable") @set:PropertyName("isAvailable")
     var isAvailable: Boolean = true,

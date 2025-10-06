@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LibraryBooks
+import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.arsip.ui.auth.AuthScreen
 import com.example.arsip.ui.books.*
 import com.example.arsip.ui.map.MapPickerScreen
+import com.example.arsip.ui.discover.DiscoverScreen
 import com.example.arsip.ui.profile.ProfileScreen
 import com.example.arsip.ui.profile.ProfileViewModel
 
@@ -69,6 +71,12 @@ fun AppNav() {
                         NavigationBarItem(
                             selected = tab == 1,
                             onClick = { tab = 1 },
+                            label = { Text("Jelajah") },
+                            icon = { Icon(Icons.Outlined.Explore, null) }
+                        )
+                        NavigationBarItem(
+                            selected = tab == 2,
+                            onClick = { tab = 2 },
                             label = { Text("Profil") },
                             icon = { Icon(Icons.Outlined.Person, null) }
                         )
@@ -85,6 +93,10 @@ fun AppNav() {
                 Box(Modifier.padding(pv)) {
                     if (tab == 0) {
                         MyBooksScreen(onClickBook = { bookId ->
+                            nav.navigate("detail/$bookId")
+                        })
+                    } else if (tab == 1) {
+                        DiscoverScreen(onClickBook = { bookId ->
                             nav.navigate("detail/$bookId")
                         })
                     } else {
