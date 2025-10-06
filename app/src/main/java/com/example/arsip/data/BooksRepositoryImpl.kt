@@ -3,6 +3,7 @@
 package com.example.arsip.data
 
 import android.net.Uri
+import com.example.arsip.upload.ImageUploader
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
@@ -15,7 +16,7 @@ class BooksRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
     private val db: FirebaseFirestore,
     private val uploader: ImageUploader
-) : BooksRepository { // <-- Mengimplementasikan interface
+) : BooksRepository {
 
     override fun myBooksFlow(): Flow<List<Book>> = callbackFlow {
         val uid = auth.currentUser?.uid
@@ -79,7 +80,7 @@ class BooksRepositoryImpl @Inject constructor(
         val entity = Book(
             title = title,
             author = author,
-            desc = desc, // <-- Pastikan field 'desc' ada di data class Book
+            desc = desc,
             imageUrls = urls,
             ownerId = uid,
             addressText = addressText,
@@ -118,8 +119,6 @@ class BooksRepositoryImpl @Inject constructor(
         val ln = d.getDouble("lng")
         return Triple(t, la, ln)
     }
-
-    // --- IMPLEMENTASI FUNGSI BARU ---
 
     override fun getBook(id: String): Flow<Book?> = callbackFlow {
         val reg = db.collection("books").document(id)

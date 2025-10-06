@@ -1,8 +1,9 @@
 package com.example.arsip.di
 
 import android.content.Context
-import com.example.arsip.data.CloudinaryUploader
-import com.example.arsip.data.ImageUploader
+import com.example.arsip.BuildConfig
+import com.example.arsip.upload.CloudinaryUploader
+import com.example.arsip.upload.ImageUploader
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,5 +23,11 @@ object UploaderModule {
     fun provideImageUploader(
         @ApplicationContext ctx: Context,
         client: OkHttpClient
-    ): ImageUploader = CloudinaryUploader(ctx, client)
+    ): ImageUploader = CloudinaryUploader(
+        contentResolver = ctx.contentResolver,
+        cloudName = BuildConfig.CLOUDINARY_CLOUD_NAME,
+        unsignedPreset = BuildConfig.CLOUDINARY_PRESET,
+        folder = "books",
+        client = client
+    )
 }
