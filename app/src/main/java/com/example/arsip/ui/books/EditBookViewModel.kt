@@ -21,7 +21,6 @@ class EditBookViewModel @Inject constructor(
     var book by mutableStateOf<Book?>(null)
         private set
 
-    // State untuk menampung nilai di dalam form input
     var title by mutableStateOf("")
     var author by mutableStateOf("")
     var desc by mutableStateOf("")
@@ -30,16 +29,12 @@ class EditBookViewModel @Inject constructor(
     var lat by mutableStateOf<Double?>(null)
     var lng by mutableStateOf<Double?>(null)
 
-    // State untuk UI (loading & pesan)
     var busy by mutableStateOf(false)
     var message by mutableStateOf<String?>(null)
 
     init {
         viewModelScope.launch {
-            // Mengambil data awal buku sekali saja dari Flow
             book = repo.getBook(bookId).first()
-
-            // Mengisi form dengan data awal dari buku yang diambil
             book?.let {
                 title = it.title
                 author = it.author
@@ -83,6 +78,6 @@ class EditBookViewModel @Inject constructor(
             lng = lng
         )
         busy = false
-        onSuccess() // Kembali ke halaman sebelumnya setelah sukses
+        onSuccess()
     }
 }

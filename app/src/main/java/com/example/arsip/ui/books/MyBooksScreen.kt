@@ -30,7 +30,7 @@ import com.example.arsip.data.Book
 
 @Composable
 fun MyBooksScreen(
-    onClickBook: (String) -> Unit, // <-- Parameter baru untuk navigasi
+    onClickBook: (String) -> Unit,
     vm: MyBooksViewModel = hiltViewModel()
 ) {
     val items by vm.items.collectAsState()
@@ -64,7 +64,7 @@ fun MyBooksScreen(
                     items(items) { book ->
                         BookCard(
                             book = book,
-                            onClick = { onClickBook(book.id) } // <-- Panggil callback di sini
+                            onClick = { onClickBook(book.id) }
                         )
                     }
                 }
@@ -88,7 +88,6 @@ private fun BookCard(book: Book, onClick: () -> Unit) {
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.Top
         ) {
-            // Box untuk menampung gambar dan status ketersediaan
             Box(modifier = Modifier.size(90.dp)) {
                 AsyncImage(
                     model = book.imageUrls.firstOrNull(),
@@ -98,7 +97,6 @@ private fun BookCard(book: Book, onClick: () -> Unit) {
                         .clip(RoundedCornerShape(12.dp))
                 )
 
-                // --- STATUS KETERSEDIAAN (BADGE) ---
                 val (statusText, statusColor) = if (book.isAvailable) {
                     "Tersedia" to Color(0xFF4CAF50) // Hijau
                 } else {
@@ -140,7 +138,6 @@ private fun BookCard(book: Book, onClick: () -> Unit) {
     }
 }
 
-// --- KUMPULAN FUNGSI PREVIEW ---
 
 @Preview(showBackground = true, name = "Pratinjau Kartu Buku")
 @Composable
@@ -150,7 +147,7 @@ private fun BookCardPreview() {
         title = "Belajar Jetpack Compose Untuk Pemula Hingga Mahir",
         author = "Ahmad Dahlan",
         imageUrls = listOf(""),
-        isAvailable = false // Contoh status "Dipinjam"
+        isAvailable = false
     )
     MaterialTheme {
         BookCard(book = dummyBook, onClick = {})

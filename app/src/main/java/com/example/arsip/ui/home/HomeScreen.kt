@@ -41,12 +41,12 @@ fun HomeScreen(
 ) {
     val state by vm.state.collectAsState()
     val context = LocalContext.current
-    var showLocationFilter by remember { mutableStateOf(false) }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
             vm.onLocationPermissionGranted()
         }
     }
@@ -198,7 +198,22 @@ fun HomeScreen(
                     item {
                         FilterChip(
                             selected = state.selectedFilter == "terdekat",
-                            onClick = { vm.onFilterSelect("terdekat") },
+                            onClick = {
+                                val hasPermission = ContextCompat.checkSelfPermission(
+                                    context, Manifest.permission.ACCESS_FINE_LOCATION
+                                ) == PackageManager.PERMISSION_GRANTED
+
+                                if (hasPermission) {
+                                    vm.onFilterSelect("terdekat")
+                                } else {
+                                    locationPermissionLauncher.launch(
+                                        arrayOf(
+                                            Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
+                                    )
+                                }
+                            },
                             label = {
                                 Text(
                                     "📍 Terdekat",
@@ -281,8 +296,6 @@ fun HomeScreen(
                                         modifier = Modifier.fillMaxSize(),
                                         contentScale = ContentScale.Crop
                                     )
-
-                                    // Gradient Overlay
                                     Box(
                                         modifier = Modifier
                                             .fillMaxSize()
@@ -296,7 +309,6 @@ fun HomeScreen(
                                                 )
                                             )
                                     )
-
                                     Text(
                                         text = book.title,
                                         fontSize = 15.sp,

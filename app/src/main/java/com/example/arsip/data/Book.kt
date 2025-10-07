@@ -13,21 +13,17 @@ data class Book(
     val desc: String = "",
     val imageUrls: List<String> = emptyList(),
 
-    val ownerId: String = "",           // ID pemilik (relasi ke UserProfile)
-    val category: String = "",          // Kategori buku yang dipilih dari dropdown
-    val addressText: String = "",       // Alamat lokasi buku
+    val ownerId: String = "",
+    val category: String = "",
+    val addressText: String = "",
 
     @get:PropertyName("isAvailable") @set:PropertyName("isAvailable")
     var isAvailable: Boolean = true,
 
-    // ✅ KOORDINAT UNTUK FILTER TERDEKAT:
-    val lat: Double? = null,            // Latitude lokasi buku
-    val lng: Double? = null,            // Longitude lokasi buku
-
-    // ✅ TIMESTAMP UNTUK FILTER TERBARU:
-    val createdAt: Timestamp = Timestamp.now()  // Tanggal upload untuk filter "Terbaru"
+    val lat: Double? = null,
+    val lng: Double? = null,
+    val createdAt: Timestamp = Timestamp.now()
 ) {
-    // Helper property untuk mendapatkan Date dari Timestamp
     @get:Exclude
     val timestamp: Date
         get() = createdAt.toDate()

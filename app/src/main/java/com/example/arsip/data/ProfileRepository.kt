@@ -4,6 +4,8 @@ import android.net.Uri
 import com.example.arsip.upload.ImageUploader
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -26,12 +28,11 @@ class ProfileRepository @Inject constructor(
         awaitClose { reg.remove() }
     }
 
-    // ✅ NEW: Get any user's profile by their ID for WhatsApp functionality
     fun getUserProfile(userId: String): Flow<UserProfile?> = callbackFlow {
         val reg = db.collection("users").document(userId)
             .addSnapshotListener { snap, e ->
                 if (e != null) {
-                    trySend(null) // Send null on error instead of closing
+                    trySend(null)
                     return@addSnapshotListener
                 }
                 val userProfile = snap?.toObject(UserProfile::class.java)
@@ -51,29 +52,25 @@ class ProfileRepository @Inject constructor(
         db.collection("users").document(uid).update("photoUrl", url).await()
     }
 
-    // ✅ NEW: Update phone number for WhatsApp functionality
     suspend fun updatePhoneNumber(phoneNumber: String) {
         val uid = auth.currentUser!!.uid
         db.collection("users").document(uid).update("phoneNumber", phoneNumber).await()
     }
 
-    // ✅ NEW: Update address
     suspend fun updateAddress(address: String) {
         val uid = auth.currentUser!!.uid
-        db.collection("users").document(uid).update("address", address).await()
+        db.collection("users").document(uid).update("addressText", address).await()
     }
 
-    // ✅ NEW: Update location coordinates
     suspend fun updateLocation(latitude: Double, longitude: Double) {
         val uid = auth.currentUser!!.uid
         val updates = mapOf(
-            "latitude" to latitude,
-            "longitude" to longitude
+            "lat" to latitude,
+            "lng" to longitude
         )
         db.collection("users").document(uid).update(updates).await()
     }
 
-    // ✅ NEW: Update complete profile (for registration)
     suspend fun updateCompleteProfile(
         displayName: String,
         phoneNumber: String,
@@ -86,11 +83,19 @@ class ProfileRepository @Inject constructor(
             "uid" to uid,
             "displayName" to displayName,
             "phoneNumber" to phoneNumber,
-            "address" to address,
-            "latitude" to latitude,
-            "longitude" to longitude,
-            "createdAt" to com.google.firebase.Timestamp.now()
+            "addressText" to address,
+            "lat" to latitude,
+            "lng" to longitude,
+            "createdAt" to Timestamp.now()
         )
-        db.collection("users").document(uid).update(updates).await()
+        db.collection("users").document(uid).set(updates, SetOptions.merge()).await()
+    }
+
+    fun getCurrentUserId(): String? {
+        return auth.currentUser?.uid
+    }
+
+    fun logout() {
+        auth.signOut()
     }
 }

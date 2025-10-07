@@ -19,12 +19,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.arsip.R
 import java.net.URLEncoder
 
 @Composable
@@ -35,6 +37,7 @@ fun BookDetailScreen(
 ) {
     val book by vm.book.collectAsState()
     val owner by vm.owner.collectAsState()
+    val isOwner by remember { derivedStateOf { vm.isOwner } }
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -54,6 +57,7 @@ fun BookDetailScreen(
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(whatsappUrl))
             context.startActivity(intent)
         } catch (e: Exception) {
+            // Handle error
         }
     }
 
@@ -82,9 +86,7 @@ fun BookDetailScreen(
 
     book?.let { currentBook ->
         Box(modifier = Modifier.fillMaxSize().background(Color(0xFFFAFAFA))) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
                 item {
                     Box(
                         modifier = Modifier
@@ -126,7 +128,7 @@ fun BookDetailScreen(
                                     modifier = Modifier.shadow(4.dp, RoundedCornerShape(20.dp))
                                 ) {
                                     Text(
-                                        text = "${currentBook.category}",
+                                        text = currentBook.category,
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                         style = MaterialTheme.typography.labelLarge,
                                         color = Color.White,
@@ -159,7 +161,7 @@ fun BookDetailScreen(
                         modifier = Modifier
                             .offset(y = (10).dp)
                             .padding(horizontal = 20.dp)
-                            .padding(bottom = 140.dp)
+                            .padding(bottom = 20.dp)
                     ) {
                         Card(
                             modifier = Modifier
@@ -214,7 +216,7 @@ fun BookDetailScreen(
                                     )
                                 }
 
-                                if (vm.isOwner) {
+                                if (isOwner) {
                                     Switch(
                                         checked = currentBook.isAvailable,
                                         onCheckedChange = { vm.toggleAvailability(it) },
@@ -310,7 +312,8 @@ fun BookDetailScreen(
                             }
                         }
 
-                        owner?.let { ownerProfile ->
+                        if (!isOwner && owner != null) {
+                            val ownerProfile = owner!!
                             Spacer(Modifier.height(20.dp))
                             Card(
                                 modifier = Modifier
@@ -322,34 +325,22 @@ fun BookDetailScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(20.dp),
+                                        .padding(horizontal = 20.dp, vertical = 16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Box(
+                                    AsyncImage(
+                                        model = ownerProfile.photoUrl,
+                                        contentDescription = "Foto Pemilik",
                                         modifier = Modifier
                                             .size(56.dp)
                                             .clip(CircleShape)
-                                            .background(
-                                                brush = Brush.linearGradient(
-                                                    colors = listOf(
-                                                        Color(0xFF6200EE),
-                                                        Color(0xFF9D4EDD)
-                                                    )
-                                                )
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(32.dp)
-                                        )
-                                    }
+                                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                                        contentScale = ContentScale.Crop
+                                    )
 
                                     Spacer(Modifier.width(16.dp))
 
-                                    Column {
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = "Pemilik Buku",
                                             fontSize = 13.sp,
@@ -363,12 +354,32 @@ fun BookDetailScreen(
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF1C1B1F)
                                         )
-                                        if (ownerProfile.address.isNotBlank()) {
+                                        if (ownerProfile.phoneNumber.isNotBlank()) {
                                             Spacer(Modifier.height(4.dp))
-                                            Text(
-                                                text = ownerProfile.address,
-                                                fontSize = 14.sp,
-                                                color = Color(0xFF49454F)
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFF49454F))
+                                                Spacer(Modifier.width(4.dp))
+                                                Text(
+                                                    text = ownerProfile.phoneNumber,
+                                                    fontSize = 14.sp,
+                                                    color = Color(0xFF49454F)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    if (currentBook.isAvailable && ownerProfile.phoneNumber.isNotBlank()) {
+                                        IconButton(
+                                            onClick = { openWhatsApp(ownerProfile.phoneNumber, currentBook.title) },
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF25D366))
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_whatsapp),
+                                                contentDescription = "Hubungi via WhatsApp",
+                                                tint = Color.White
                                             )
                                         }
                                     }
@@ -401,7 +412,7 @@ fun BookDetailScreen(
                     )
                 }
 
-                if (vm.isOwner) {
+                if (isOwner) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         FloatingActionButton(
                             onClick = { navController.navigate("edit/$bookId") },
@@ -430,37 +441,6 @@ fun BookDetailScreen(
                             )
                         }
                     }
-                }
-            }
-
-            if (currentBook.isAvailable && owner?.phoneNumber?.isNotBlank() == true && !vm.isOwner) {
-                Button(
-                    onClick = { openWhatsApp(owner!!.phoneNumber, currentBook.title) },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(20.dp)
-                        .height(64.dp)
-                        .shadow(12.dp, RoundedCornerShape(32.dp)),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF25D366)
-                    ),
-                    shape = RoundedCornerShape(32.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Phone,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(26.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "💬 PINJAM SEKARANG",
-                        color = Color.White,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 0.5.sp
-                    )
                 }
             }
         }

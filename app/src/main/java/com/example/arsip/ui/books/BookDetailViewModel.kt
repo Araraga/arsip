@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.arsip.data.Book
-import com.example.arsip.data.BooksRepositoryImpl
+import com.example.arsip.data.BooksRepository // <-- FIX 1: Gunakan Interface, bukan Implementasi
 import com.example.arsip.data.ProfileRepository
 import com.example.arsip.data.UserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,7 +18,7 @@ import androidx.compose.runtime.setValue
 
 @HiltViewModel
 class BookDetailViewModel @Inject constructor(
-    private val repo: BooksRepositoryImpl,
+    private val repo: BooksRepository, // <-- FIX 1: Gunakan Interface, bukan Implementasi
     private val profileRepository: ProfileRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -27,11 +27,9 @@ class BookDetailViewModel @Inject constructor(
     private val _book = MutableStateFlow<Book?>(null)
     val book = _book.asStateFlow()
 
-    // ✅ NEW: Owner profile for WhatsApp functionality
     private val _owner = MutableStateFlow<UserProfile?>(null)
     val owner = _owner.asStateFlow()
 
-    // ✅ NEW: Check if current user is the owner
     var isOwner by mutableStateOf(false)
         private set
 
@@ -43,11 +41,8 @@ class BookDetailViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            // Ambil data buku spesifik dari repository
             repo.getBook(bookId).collect { bookData ->
                 _book.value = bookData
-
-                // ✅ NEW: Check if current user is the owner
                 bookData?.let { book ->
                     isOwner = repo.getCurrentUserId() == book.ownerId
                     fetchOwnerProfile(book.ownerId)
@@ -56,17 +51,13 @@ class BookDetailViewModel @Inject constructor(
         }
     }
 
-    // ✅ NEW: Fetch owner profile for WhatsApp functionality
     private fun fetchOwnerProfile(ownerId: String) {
         viewModelScope.launch {
             try {
-                // Assuming ProfileRepository has a method to get user by ID
-                // You may need to implement this method in ProfileRepository
                 profileRepository.getUserProfile(ownerId).collect { userProfile ->
                     _owner.value = userProfile
                 }
             } catch (e: Exception) {
-                // Handle error - owner info not available
                 _owner.value = null
             }
         }
@@ -76,7 +67,6 @@ class BookDetailViewModel @Inject constructor(
         viewModelScope.launch {
             busy = true
             repo.updateAvailability(bookId, isAvailable)
-            _book.value = _book.value?.copy(isAvailable = isAvailable)
             busy = false
         }
     }
@@ -84,10 +74,8 @@ class BookDetailViewModel @Inject constructor(
     fun deleteBook(onSuccess: () -> Unit) {
         viewModelScope.launch {
             isDeleting = true
-            busy = true
             repo.deleteBook(bookId)
             onSuccess()
-            busy = false
         }
     }
 }

@@ -75,19 +75,17 @@ private fun AuthHeader(isRegister: Boolean) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Stack (tumpuk) lingkaran putih dan logo
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(100.dp) // Ukuran lingkaran putih, sedikit lebih besar dari logo
+                    .size(100.dp)
                     .background(Color.White, shape = CircleShape)
-                    .padding(15.dp) // Padding opsional agar logo tidak terlalu mepet
+                    .padding(15.dp)
             ) {
-                // Menggunakan Image composable untuk memuat file logo.png
                 Image(
-                    painter = painterResource(id = R.drawable.logo), // <-- Menggunakan nama file Anda
+                    painter = painterResource(id = R.drawable.logo),
                     contentDescription = "Logo Aplikasi",
-                    modifier = Modifier.fillMaxSize() // Logo akan mengisi Box lingkaran ini
+                    modifier = Modifier.fillMaxSize()
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -145,7 +143,6 @@ private fun AuthContent(
             )
             Spacer(Modifier.height(24.dp))
 
-            // Error message display
             error?.let {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -234,7 +231,6 @@ private fun AuthContent(
                 )
                 Spacer(Modifier.height(16.dp))
 
-                // Tombol untuk memilih lokasi di peta
                 OutlinedButton(
                     onClick = onPickMap,
                     modifier = Modifier.fillMaxWidth(),
@@ -287,7 +283,6 @@ private fun AuthContent(
     }
 }
 
-// --- Preview Composable (Tidak perlu diubah) ---
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 720)
 @Composable

@@ -30,8 +30,10 @@ data class HomeState(
     val errorMessage: String? = null
 ) {
     fun calculateDistance(book: Book): String {
+        val area = book.addressText.split(",").firstOrNull()?.trim() ?: "Lokasi tidak diketahui"
+
         if (userLocation == null || book.lat == null || book.lng == null) {
-            return book.addressText.split(",").firstOrNull()?.trim() ?: "Lokasi tidak diketahui"
+            return area
         }
 
         val distance = calculateDistanceInKm(
@@ -41,11 +43,13 @@ data class HomeState(
             book.lng
         )
 
-        return when {
+        val distanceString = when {
             distance < 1.0 -> "${(distance * 1000).toInt()} m"
             distance < 10.0 -> String.format("%.1f km", distance)
             else -> "${distance.toInt()} km"
         }
+
+        return "$area • $distanceString"
     }
 
     private fun calculateDistanceInKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
@@ -90,14 +94,17 @@ class HomeViewModel @Inject constructor(
                         emit(null)
                     }
                     .collectLatest { userProfile ->
-                        // ✅ FIXED: Use real user location from database
-                        val userLocation = if (userProfile?.latitude != null && userProfile?.longitude != null &&
-                            userProfile.latitude != 0.0 && userProfile.longitude != 0.0) {
-                            LatLng(userProfile.latitude, userProfile.longitude)
-                        } else {
-                            // Default ke Jakarta jika tidak ada lokasi user
-                            LatLng(-6.2088, 106.8456)
+                        Log.d("HomeViewModelDebug", "User Profile Diterima: $userProfile")
+
+                        val userLocation = userProfile?.let { profile ->
+                            if (profile.latitude != 0.0 || profile.longitude != 0.0) {
+                                LatLng(profile.latitude, profile.longitude)
+                            } else {
+                                null
+                            }
                         }
+
+                        Log.d("HomeViewModelDebug", "userLocation di-set ke: $userLocation")
 
                         _state.update {
                             it.copy(
@@ -106,8 +113,6 @@ class HomeViewModel @Inject constructor(
                                 userLocation = userLocation
                             )
                         }
-
-                        // ✅ FIXED: Reapply filters immediately when user location changes
                         applyFilters()
                     }
             } catch (e: Exception) {
@@ -115,10 +120,9 @@ class HomeViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         userName = "User",
-                        userLocation = LatLng(-6.2088, 106.8456) // Default Jakarta
+                        userLocation = null
                     )
                 }
-                // Apply filters even with default location
                 applyFilters()
             }
         }
@@ -186,9 +190,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onLocationPermissionGranted() {
-        val defaultLocation = LatLng(-6.2088, 106.8456)
-        _state.update { it.copy(userLocation = defaultLocation) }
-        applyFilters()
+        loadUserProfile()
     }
 
     private fun applyFilters() {
@@ -203,11 +205,12 @@ class HomeViewModel @Inject constructor(
 
     private fun filterBooks(books: List<Book>): List<Book> {
         val currentState = _state.value
+        val currentUserId = booksRepository.getCurrentUserId()
 
-        // ✅ FILTER 1: Hanya tampilkan buku yang tersedia (isAvailable = true)
-        var filteredBooks = books.filter { it.isAvailable }
+        var filteredBooks = books.filter { it.ownerId != currentUserId }
 
-        // ✅ FILTER 2: Filter berdasarkan search query
+        filteredBooks = filteredBooks.filter { it.isAvailable }
+
         if (currentState.searchQuery.isNotBlank()) {
             val query = currentState.searchQuery.lowercase()
             filteredBooks = filteredBooks.filter { book ->
@@ -218,7 +221,6 @@ class HomeViewModel @Inject constructor(
             }
         }
 
-        // ✅ FILTER 3: Filter berdasarkan lokasi user dan jarak maksimal
         val userLocation = currentState.userLocation
         if (userLocation != null && currentState.selectedFilter == "terdekat") {
             filteredBooks = filteredBooks.filter { book ->
@@ -229,12 +231,11 @@ class HomeViewModel @Inject constructor(
                         book.lat,
                         book.lng
                     )
-                    distance <= 25.0 // Maksimal 25km sesuai dengan filter chip
+                    distance <= 25.0
                 } else {
-                    false // Hilangkan buku yang tidak memiliki koordinat
+                    false
                 }
             }.sortedBy { book ->
-                // Sort berdasarkan jarak terdekat
                 if (book.lat != null && book.lng != null) {
                     calculateDistanceInKm(
                         userLocation.latitude,
@@ -247,7 +248,6 @@ class HomeViewModel @Inject constructor(
                 }
             }
         } else if (currentState.selectedFilter == "terbaru") {
-            // ✅ FILTER 4: Sort berdasarkan tanggal terbaru
             filteredBooks = filteredBooks.sortedByDescending { it.createdAt.toDate().time }
         }
 

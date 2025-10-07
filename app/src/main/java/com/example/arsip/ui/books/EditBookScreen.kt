@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun EditBookScreen(
     navController: NavController,
-    onPickMap: () -> Unit, // Callback untuk membuka peta
+    onPickMap: () -> Unit,
     vm: EditBookViewModel = hiltViewModel()
 ) {
     val scope = rememberCoroutineScope()
@@ -55,12 +55,10 @@ fun EditBookScreen(
         }
     ) { innerPadding ->
         if (book == null) {
-            // Tampilan loading saat data buku sedang diambil
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else {
-            // Form edit di dalam LazyColumn
             LazyColumn(
                 modifier = Modifier
                     .padding(innerPadding)
@@ -93,7 +91,6 @@ fun EditBookScreen(
                     )
                 }
                 item {
-                    // Dropdown untuk edit kategori buku
                     var expanded by remember { mutableStateOf(false) }
 
                     ExposedDropdownMenuBox(
@@ -119,7 +116,6 @@ fun EditBookScreen(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
-                            // Daftar kategori buku diambil dari BookCategories
                             BookCategories.ALL_CATEGORIES.forEach { category ->
                                 DropdownMenuItem(
                                     text = { Text(category) },
@@ -147,7 +143,6 @@ fun EditBookScreen(
                         Text("Pilih Ulang Lokasi di Peta")
                     }
                 }
-                // Spacer agar tidak tertutup FAB
                 item {
                     Spacer(Modifier.height(80.dp))
                 }

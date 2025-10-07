@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)   // penting utk Kotlin 2.x
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.kapt)
@@ -19,7 +19,6 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // ← ganti dengan punyamu
         buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"drgrdsnif\"")
         buildConfigField("String", "CLOUDINARY_PRESET", "\"arsipbuku\"")
     }
@@ -29,14 +28,12 @@ android {
         buildConfig = true
     }
 
-    // Untuk AGP modern + Compose, pakai Java 17
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
 
-    // JANGAN pakai composeOptions { kotlinCompilerExtensionVersion = "..." } lagi untuk Kotlin 2.x
 }
 
 dependencies {

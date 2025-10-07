@@ -48,11 +48,9 @@ fun AddBookScreen(
         }
     }
 
-    // Menggunakan Scaffold untuk layout yang lebih baik dan penempatan FAB yang benar
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            // TopBar kustom agar header bisa turun
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -62,11 +60,9 @@ fun AddBookScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Tombol kembali
                     IconButton(onClick = onDone) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
                     }
-                    // Judul halaman
                     Text(
                         text = "Tambah Buku Baru",
                         style = MaterialTheme.typography.headlineSmall,
@@ -77,7 +73,6 @@ fun AddBookScreen(
             }
         },
         floatingActionButton = {
-            // Tombol Simpan (FAB) yang posisinya sudah benar
             ExtendedFloatingActionButton(
                 onClick = { scope.launch { vm.addBook(onDone) } },
                 icon = { Icon(Icons.Outlined.Check, contentDescription = null) },
@@ -92,7 +87,6 @@ fun AddBookScreen(
         ) {
             item {
                 FormSectionCard(title = "Detail Buku") {
-                    // ... (Konten form tidak berubah)
                     OutlinedTextField(
                         value = vm.title, onValueChange = { vm.title = it },
                         label = { Text("Judul Buku") }, singleLine = true, modifier = Modifier.fillMaxWidth()
@@ -111,7 +105,6 @@ fun AddBookScreen(
             }
             item {
                 FormSectionCard(title = "Alamat") {
-                    // ... (Konten form tidak berubah)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = vm.useProfileAddr, onCheckedChange = { vm.toggleUseProfileAddr(it) })
                         Text("Gunakan alamat dari Profil")
@@ -182,7 +175,6 @@ fun AddBookScreen(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
-                            // Daftar kategori buku diambil dari BookCategories
                             BookCategories.ALL_CATEGORIES.forEach { category ->
                                 DropdownMenuItem(
                                     text = { Text(category) },

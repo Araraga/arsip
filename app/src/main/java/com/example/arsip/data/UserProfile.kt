@@ -1,5 +1,6 @@
 package com.example.arsip.data
 
+import com.google.firebase.firestore.PropertyName
 import java.util.Date
 
 data class UserProfile(
@@ -7,11 +8,16 @@ data class UserProfile(
     val displayName: String = "-",
     val email: String = "",
     val photoUrl: String = "",
+    val phoneNumber: String = "",
 
-    // ✅ FIELD BARU YANG DITAMBAHKAN:
-    val phoneNumber: String = "",       // Nomor WhatsApp untuk dihubungi
-    val address: String = "",           // Alamat lengkap user
-    val latitude: Double = 0.0,         // Koordinat latitude untuk hitung jarak
-    val longitude: Double = 0.0,        // Koordinat longitude untuk hitung jarak
-    val createdAt: Date = Date()        // Tanggal registrasi
+    @get:PropertyName("addressText") @set:PropertyName("addressText")
+    var address: String = "",
+
+    @get:PropertyName("lat") @set:PropertyName("lat")
+    var latitude: Double = 0.0,
+
+    @get:PropertyName("lng") @set:PropertyName("lng")
+    var longitude: Double = 0.0,
+
+    val createdAt: Date = Date()
 )

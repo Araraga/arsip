@@ -21,7 +21,4 @@ object RepositoryModule {
         auth: FirebaseAuth,
         db: FirebaseFirestore
     ): AuthRepository = AuthRepository(auth, db)
-
-    // Catatan: provideBooksRepositoryImpl yang sebelumnya ada di sini sudah dihapus
-    // karena tidak diperlukan lagi.
 }

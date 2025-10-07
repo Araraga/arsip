@@ -56,9 +56,8 @@ class AddBookViewModel @Inject constructor(
             lng == null)
         {
             message = "Harap isi semua kolom wajib (Judul, Penulis, Kategori, Alamat, Foto)."
-            return // Menghentikan eksekusi fungsi jika validasi gagal
+            return
         }
-        // --- VALIDASI SELESAI ---
 
         busy = true
         val r = repo.addBook(

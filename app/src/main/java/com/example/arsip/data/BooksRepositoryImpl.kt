@@ -145,7 +145,7 @@ class BooksRepositoryImpl @Inject constructor(
         db.collection("books").document(id).delete().await()
     }
 
-    fun getCurrentUserId(): String? {
+    override fun getCurrentUserId(): String? {
         return auth.currentUser?.uid
     }
 }

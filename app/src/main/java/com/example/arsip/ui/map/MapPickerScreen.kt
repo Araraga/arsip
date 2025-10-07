@@ -62,7 +62,7 @@ fun MapPickerScreen(nav: NavController) {
             return@LaunchedEffect
         }
         loadingSuggest = true
-        delay(320) // debounce
+        delay(320)
         suggestions = runCatching { fetchCitySuggestions(ctx, q) }.getOrElse { emptyList() }
         loadingSuggest = false
     }
@@ -288,7 +288,6 @@ private suspend fun fetchCitySuggestions(ctx: Context, q: String): List<CitySugg
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
         val qq = URLEncoder.encode(q, Charsets.UTF_8.name())
-        // Ambil tempat bertipe 'city|town|village' untuk akurasi, limit 8
         val url = "https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&" +
                 "limit=8&accept-language=id&q=$qq"
         val req = Request.Builder()

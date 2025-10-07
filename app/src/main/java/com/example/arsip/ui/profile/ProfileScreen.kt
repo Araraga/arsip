@@ -33,7 +33,7 @@ import coil.compose.AsyncImage
 fun ProfileScreen(
     navController: NavController,
     onLoggedOut: () -> Unit,
-    onPickMap: () -> Unit, // Callback untuk membuka peta
+    onPickMap: () -> Unit,
     vm: ProfileViewModel = hiltViewModel()
 ) {
     val snap by vm.snap.collectAsState()
@@ -45,7 +45,6 @@ fun ProfileScreen(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? -> if (uri != null) vm.updatePhoto(uri) }
 
-    // Menangani hasil dari MapPickerScreen
     LaunchedEffect(navController) {
         val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
         savedStateHandle?.let { handle ->
@@ -66,12 +65,10 @@ fun ProfileScreen(
         }
     }
 
-    // Memindahkan semua konten ke dalam LazyColumn agar bisa di-scroll
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally // Posisikan elemen di tengah secara horizontal
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- HEADER PROFIL (SETENGAH LINGKARAN) ---
         item {
             ProfileHeaderContent(
                 photoUrl = photoUrl,
@@ -79,11 +76,10 @@ fun ProfileScreen(
                 nameInput = vm.name,
                 onNameChange = { vm.name = it },
                 onSaveName = { vm.saveName() },
-                onPickPhoto = { pickPhoto.launch("image/*") } // Melewatkan aksi pick photo
+                onPickPhoto = { pickPhoto.launch("image/*") }
             )
         }
 
-        // --- Kartu untuk Nomor WhatsApp ---
         item {
             Spacer(modifier = Modifier.height(16.dp))
             Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
@@ -111,14 +107,13 @@ fun ProfileScreen(
             }
         }
 
-        // --- Kartu untuk Alamat ---
         item {
-            Spacer(modifier = Modifier.height(16.dp)) // Jarak antara header dan kartu alamat
+            Spacer(modifier = Modifier.height(16.dp))
             Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Column(Modifier.padding(16.dp)) {
                     Text("Alamat Profil", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(8.dp))
-                    Text(addressText) // Menampilkan alamat yang sudah ada
+                    Text(addressText)
                     HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
                     OutlinedTextField(
                         value = vm.tmpAddr,
@@ -145,9 +140,8 @@ fun ProfileScreen(
             }
         }
 
-        // --- Tombol Logout ---
         item {
-            Spacer(modifier = Modifier.height(24.dp)) // Jarak ke tombol logout
+            Spacer(modifier = Modifier.height(24.dp))
             OutlinedButton(
                 onClick = { vm.logout(); onLoggedOut() },
                 modifier = Modifier
@@ -157,7 +151,7 @@ fun ProfileScreen(
             ) {
                 Text("Logout")
             }
-            Spacer(modifier = Modifier.height(16.dp)) // Padding bawah untuk scroll
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -169,7 +163,7 @@ private fun ProfileHeaderContent(
     nameInput: String,
     onNameChange: (String) -> Unit,
     onSaveName: () -> Unit,
-    onPickPhoto: () -> Unit // Callback baru untuk memilih foto
+    onPickPhoto: () -> Unit
 ) {
     var isEditingName by remember { mutableStateOf(false) }
 
@@ -187,12 +181,10 @@ private fun ProfileHeaderContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Box untuk Foto Profil dengan ikon edit
             Box(
                 modifier = Modifier.size(120.dp),
-                contentAlignment = Alignment.BottomEnd // Posisikan ikon edit di kanan bawah
+                contentAlignment = Alignment.BottomEnd
             ) {
-                // Foto Profil
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -218,27 +210,26 @@ private fun ProfileHeaderContent(
                     }
                 }
 
-                // Icon Edit Foto (menimpa foto profil)
                 IconButton(
                     onClick = onPickPhoto,
                     modifier = Modifier
-                        .size(32.dp) // Ukuran ikon edit
+                        .size(32.dp)
                         .clip(CircleShape)
-                        .background(Color.White) // Latar belakang lingkaran putih
-                        .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape) // Border opsional
-                        .align(Alignment.BottomEnd) // Posisikan di pojok kanan bawah foto
+                        .background(Color.White)
+                        .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                        .align(Alignment.BottomEnd)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.CameraAlt, // Ikon kamera
+                        imageVector = Icons.Default.CameraAlt,
                         contentDescription = "Ubah Foto",
-                        tint = MaterialTheme.colorScheme.primary, // Warna ikon
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Nama Pengguna dan Tombol Edit
+
             if (isEditingName) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
@@ -282,12 +273,10 @@ private fun ProfileHeaderContent(
 
 
 // --- FUNGSI PREVIEW ---
-
 @Preview(showBackground = true, name = "Halaman Profil")
 @Composable
 private fun ProfileScreenPreview() {
     val dummyDisplayName by remember { mutableStateOf("Budi Setiawan") }
-    // Ganti dengan URL gambar asli jika ingin melihat foto profil di preview
     val dummyPhotoUrl by remember { mutableStateOf<String?>("https://randomuser.me/api/portraits/men/1.jpg") }
     val dummyAddressText by remember { mutableStateOf("Jl. Pahlawan No. 45, Purwokerto, Jawa Tengah, Indonesia") }
 

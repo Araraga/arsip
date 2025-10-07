@@ -23,8 +23,7 @@ object FirebaseModule {
         val db = FirebaseFirestore.getInstance()
         val settings = FirebaseFirestoreSettings.Builder()
             .setLocalCacheSettings(
-                PersistentCacheSettings.newBuilder()   // ← pengganti isPersistenceEnabled=true
-                    // .setSizeBytes(PersistentCacheSettings.DEFAULT_SIZE_BYTES) // opsional
+                PersistentCacheSettings.newBuilder()
                     .build()
             )
             .build()

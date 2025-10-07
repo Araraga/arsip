@@ -9,6 +9,7 @@ interface BooksRepository {
 
     fun myBooksFlow(): Flow<List<Book>>
     fun allBooksFlow(): Flow<List<Book>>
+    fun getCurrentUserId(): String?
 
     suspend fun addBook(
         title: String,
